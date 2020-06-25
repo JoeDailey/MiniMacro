@@ -1,0 +1,8 @@
+settings.ts
+
+node_modules
+
+*.js
+*.js.map
+
+**/.DS_Store

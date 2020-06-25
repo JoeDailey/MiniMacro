@@ -1,0 +1,25 @@
+{
+  "name": "MiniMacro",
+  "version": "1.0.0",
+  "description": "Simple, lightweight, and predictable macro service bot.",
+  "main": "index.js",
+  "author": "Joe Dailey <josephldailey@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@types/node": "^14.0.14",
+    "@types/ws": "^7.2.5",
+    "discord.js": "^12.2.0",
+    "tsc": "^1.20150623.0",
+    "typescript": "^3.9.5"
+  },
+  "scripts": {
+    "run": "tsc --build tsconfig.json && node",
+    "dev": "nodemon --watch index.ts --exec ts-node index.ts",
+    "build": "tsc --build tsconfig.json"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4",
+    "ts-node": "^8.10.2"
+  }
+}
