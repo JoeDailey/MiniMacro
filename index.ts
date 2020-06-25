@@ -54,10 +54,14 @@ async function fetchMacros(
 ): Promise<MessageAttachment[]> {
   try {
     const messages = await channel.messages.fetch({ limit: 100 });
-    const macros = messages.filter(msg => (
-      msg.content.match(command)[1] === macro_name &&
-      msg.attachments.size > 0
-    ));
+    const macros = messages.filter(msg => {
+      const match = msg.content.match(command);
+      return (
+        match != null &&
+        match[1] === macro_name &&
+        msg.attachments.size > 0
+      );
+    });
     const attachments = macros.flatMap(msg => msg.attachments);
     return Array.from(attachments.values());
   } catch (e) {
