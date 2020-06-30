@@ -1,5 +1,5 @@
 import settings from './settings';
-import { Client, Message, TextChannel, GuildChannel, DMChannel, NewsChannel, MessageAttachment } from 'discord.js';
+import { Client, Message, TextChannel, GuildChannel, DMChannel, NewsChannel, MessageAttachment, ChannelLogsQueryOptions } from 'discord.js';
 import { ErrorType } from './language';
 
 const client = new Client();
@@ -27,7 +27,8 @@ async function handleMessage(msg: Message) {
 
     const macro_name = msg.content.match(command)[1].toLowerCase();
     const macros = await Promise.all(macro_channels.flatMap(c => fetchMacros(macro_name, c)));
-    for (const macro of macros.flat())
+    const macro = macros.flat().shuff
+    for (const macro of )
       msg.channel.send(macro);
   }
   msg.channel.stopTyping();
@@ -53,17 +54,39 @@ async function fetchMacros(
   channel: TextChannel,
 ): Promise<MessageAttachment[]> {
   try {
-    const messages = await channel.messages.fetch({ limit: 100 });
-    const macros = messages.filter(msg => {
-      const match = msg.content.match(command);
-      return (
-        match != null &&
-        match[1].toLowerCase() === macro_name &&
-        msg.attachments.size > 0
-      );
-    });
-    const attachments = macros.flatMap(msg => msg.attachments);
-    return Array.from(attachments.values());
+    let result: MessageAttachment[] = [];
+    let config: ChannelLogsQueryOptions = { limit: 100 }; 
+    while (config != null) {
+      const messages = await channel.messages.fetch(config);
+      if (messages.size === 0) {
+        config = null;
+        break; // redundant
+      }
+
+      const macros = messages.filter(msg => {
+        if (msg.attachments.size < 0) {
+          return false;
+        }
+
+        const match = msg.content.match(command);
+        return (
+          match != null &&
+          match[1].toLowerCase() === macro_name
+        );
+      });
+
+      result = [
+        ...result,
+        ...Array.from(macros.flatMap(msg => msg.attachments).values()),
+      ];
+
+      config = {
+        ...config,
+        after: messages.last().id,
+      }
+    }
+
+    return result;
   } catch (e) {
     console.error(e);
     return new Array();
