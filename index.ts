@@ -25,7 +25,7 @@ async function handleMessage(msg: Message) {
     if (macro_channels.length === 0)
       throwToUser(msg.channel, ErrorType.NO_MACRO_CHANNEL);
 
-    const macro_name = msg.content.match(command)[1];
+    const macro_name = msg.content.match(command)[1].toLowerCase();
     const macros = await Promise.all(macro_channels.flatMap(c => fetchMacros(macro_name, c)));
     for (const macro of macros.flat())
       msg.channel.send(macro);
@@ -58,7 +58,7 @@ async function fetchMacros(
       const match = msg.content.match(command);
       return (
         match != null &&
-        match[1] === macro_name &&
+        match[1].toLowerCase() === macro_name &&
         msg.attachments.size > 0
       );
     });
