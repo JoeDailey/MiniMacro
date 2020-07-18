@@ -8,7 +8,7 @@ import MacroCommand from './macro_command';
  */
 
 export type MacroResult = {
-  attachments: MessageAttachment[],
+  attachments: (string|MessageAttachment)[],
   last_scanned: string | null,
   timeout?: NodeJS.Timeout,
 };
@@ -23,7 +23,7 @@ export default {
   fetch: async function (
     channel: TextChannel,
     macro_name: string
-  ): Promise<MessageAttachment[]> {
+  ): Promise<(string|MessageAttachment)[]> {
     const cached_result = _fetchFromCache(channel, macro_name);
 
     let config: ChannelLogsQueryOptions = { limit: 100 };
@@ -101,20 +101,29 @@ async function _fetchNextPageFromDiscord(
 function _extractMacroFromMessage(
   messages: Collection<string, Message>,
   macro_name: string,
-): MessageAttachment[] {
-  const macros = messages.filter(msg => {
-    if (msg.attachments.size < 0) {
+): (string|MessageAttachment)[] {
+  const macro_messages = messages.filter(msg => {
+    if (msg.attachments.size < 1 && !MacroCommand.isLinkMacro(msg.content)) {
       return false;
     }
 
-    const match = msg.content.match(MacroCommand);
-    return (
-      match != null &&
-      match[1].toLowerCase() === macro_name
-    );
+    const match = MacroCommand.getMacroName(msg.content);
+    return (match === macro_name);
   });
 
-  return Array.from(macros.flatMap(msg => msg.attachments).values());
+  let macros: (string|MessageAttachment)[] = [];
+  for (const [_, msg] of macro_messages) {
+    if (MacroCommand.isLinkMacro(msg.content)) {
+      macros = [...macros, MacroCommand.getLinkMacroLink(msg.content)];
+    } else {
+      macros = [
+        ...macros,
+        ...msg.attachments.values(),
+      ]
+    }
+  }
+
+  return macros;
 }
 
 function _setInCache(

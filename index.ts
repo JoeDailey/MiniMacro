@@ -16,10 +16,13 @@ client.login(settings['Bot Token']);
 // -----------------------------------------------------------------------------
 
 async function handleMessage(msg: Message) {
-  if (!MacroCommand.test(msg.content))
+  if (!MacroCommand.isSetOrSummon(msg.content))
     return;
 
   if (msg.attachments.size > 0)
+    return; // New macro has been added
+
+  if (msg.attachments.size > 0 || MacroCommand.isLinkMacro(msg.content))
     return; // New macro has been added
 
   msg.channel.startTyping();
@@ -28,7 +31,7 @@ async function handleMessage(msg: Message) {
     if (macro_channels.length === 0)
       throwToUser(msg.channel, ErrorType.NO_MACRO_CHANNEL);
 
-    const macro_name = msg.content.match(MacroCommand)[1].toLowerCase();
+    const macro_name = MacroCommand.getMacroName(msg.content);
     const macros = await Promise.all(macro_channels.flatMap(c => MacroCache.fetch(c, macro_name)));
     for (const macro of macros.flat())
       msg.channel.send(macro);
