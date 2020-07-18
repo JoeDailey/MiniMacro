@@ -1,19 +1,22 @@
 import settings from './settings';
 import { Client, Message, TextChannel, GuildChannel, DMChannel, NewsChannel, MessageAttachment, ChannelLogsQueryOptions } from 'discord.js';
 import { ErrorType } from './language';
+import MacroCache from './macro_cache';
+import MacroCommand from './macro_command';
 
 const client = new Client();
 
 client.on('ready', () => console.log('MiniMacro online!'));
 client.on('message', handleMessage);
+client.on('messageUpdate', handleDirtyCache);
+client.on('messageDelete', handleDirtyCache);
 
 client.login(settings['Bot Token']);
 
 // -----------------------------------------------------------------------------
 
-const command = /(?:^|[ ])#(\w+)/;
 async function handleMessage(msg: Message) {
-  if (!command.test(msg.content))
+  if (!MacroCommand.test(msg.content))
     return;
 
   if (msg.attachments.size > 0)
@@ -25,14 +28,27 @@ async function handleMessage(msg: Message) {
     if (macro_channels.length === 0)
       throwToUser(msg.channel, ErrorType.NO_MACRO_CHANNEL);
 
-    const macro_name = msg.content.match(command)[1].toLowerCase();
-    const macros = await Promise.all(macro_channels.flatMap(c => fetchMacros(macro_name, c)));
-    const macro = macros.flat().shuff
-    for (const macro of )
+    const macro_name = msg.content.match(MacroCommand)[1].toLowerCase();
+    const macros = await Promise.all(macro_channels.flatMap(c => MacroCache.fetch(c, macro_name)));
+    for (const macro of macros.flat())
       msg.channel.send(macro);
   }
   msg.channel.stopTyping();
 }
+
+async function handleDirtyCache(msg: Message) {
+  if (!(msg.channel instanceof TextChannel))
+    return;
+
+  // If a message/channel is not in the DiscordJS
+  // cache we won't recieve this event. This is ok
+  // because that likely means it's not in our cache
+  // either. We also periodically destroy caches
+  // to avoid this (and to free memory).
+  MacroCache.destroy(msg.channel);
+}
+
+// -----------------------------------------------------------------------------
 
 function findMacroChannels(msg: Message): TextChannel[] {
   const current_channel = msg.channel;
@@ -47,50 +63,6 @@ function findMacroChannels(msg: Message): TextChannel[] {
 
   // @ts-ignore Refinement is broken here
   return Array.from(macro_channels.values());
-}
-
-async function fetchMacros(
-  macro_name: string,
-  channel: TextChannel,
-): Promise<MessageAttachment[]> {
-  try {
-    let result: MessageAttachment[] = [];
-    let config: ChannelLogsQueryOptions = { limit: 100 }; 
-    while (config != null) {
-      const messages = await channel.messages.fetch(config);
-      if (messages.size === 0) {
-        config = null;
-        break; // redundant
-      }
-
-      const macros = messages.filter(msg => {
-        if (msg.attachments.size < 0) {
-          return false;
-        }
-
-        const match = msg.content.match(command);
-        return (
-          match != null &&
-          match[1].toLowerCase() === macro_name
-        );
-      });
-
-      result = [
-        ...result,
-        ...Array.from(macros.flatMap(msg => msg.attachments).values()),
-      ];
-
-      config = {
-        ...config,
-        after: messages.last().id,
-      }
-    }
-
-    return result;
-  } catch (e) {
-    console.error(e);
-    return new Array();
-  }
 }
 
 function throwToUser(
