@@ -10,6 +10,14 @@ export default {
     return content.match(SET_OR_SUMMON)[1].toLowerCase();
   },
 
+  getMacroNameMaybe(content: string): string|null {
+    const match = content.match(SET_OR_SUMMON);
+    if (match == null)
+      return null;
+      
+    return match[1].toLowerCase();
+  },
+
   isLinkMacro(content: string): boolean {
     return LINK_MACRO.test(content);
   },

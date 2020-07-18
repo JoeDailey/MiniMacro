@@ -107,7 +107,7 @@ function _extractMacroFromMessage(
       return false;
     }
 
-    const match = MacroCommand.getMacroName(msg.content);
+    const match = MacroCommand.getMacroNameMaybe(msg.content);
     return (match === macro_name);
   });
 
