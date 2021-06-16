@@ -26,7 +26,7 @@ async function handleMessage(msg: Message) {
     return; // New macro has been added
 
   msg.channel.startTyping();
-  {
+  try {
     const macro_channels = findMacroChannels(msg);
     if (macro_channels.length === 0)
       throwToUser(msg.channel, ErrorType.NO_MACRO_CHANNEL);
@@ -35,8 +35,11 @@ async function handleMessage(msg: Message) {
     const macros = await Promise.all(macro_channels.flatMap(c => MacroCache.fetch(c, macro_name)));
     for (const macro of macros.flat())
       msg.channel.send(macro);
+  } catch (e: any) {
+    console.error(e);
+  } finally  {
+    msg.channel.stopTyping();
   }
-  msg.channel.stopTyping();
 }
 
 async function handleDirtyCache(msg: Message) {
