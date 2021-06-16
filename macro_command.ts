@@ -1,4 +1,15 @@
+
+/**
+ * Macros are defined and used by messages that
+ * start with `#name` where 'name' can be any word.
+ */
 const SET_OR_SUMMON = /(?:^|[ ])#(\w+)/;
+
+/**
+ * Link macros are just like normal macros except
+ * that instead of an attachment, the user provides
+ * a url (and only a url) to be reposted by the bot
+ */
 const LINK_MACRO = /(?:^|[ ])#(\w+)\s+(http[^\s]+)/;
 
 export default {

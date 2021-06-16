@@ -2,14 +2,24 @@ import { MessageAttachment, ChannelLogsQueryOptions, TextChannel, Message, Colle
 import MacroCommand from './macro_command';
 
 /**
+ * To reduce how often we hit Discord for macros, we cache
+ * the ones that people are using. The cache is in memory
+ * and segmented by channel ID. 
+ * 
+ * Every cache entry remembers the ID of the last scanned
+ * message. When asked for a message, we will also check
+ * for any newer messages that match the macro name.
+ * 
  * The language used here can be kind of confusing because
  * 'config.after' means after this ID, but working backwards
  * in time because, well, messages are seen newest to oldest.
  */
 
+type Macro = string | MessageAttachment
+
 export type MacroResult = {
-  attachments: (string|MessageAttachment)[],
-  last_scanned: string | null,
+  macros: Macro[],
+  last_scanned: null | string,
   timeout?: NodeJS.Timeout,
 };
 
@@ -20,14 +30,23 @@ type MacroCache = Map<string, MacroResult>;
 const CACHE: Map<string, MacroCache> = new Map();
 
 export default {
+
+  /**
+   * Fetch a channel's macro by name. Results may come
+   * from either the in memory cache or from iterative
+   * queries to Discord.
+   * 
+   * The same macro name can be used with more than one
+   * links/attachments and, so, more than can be returned.
+   */
   fetch: async function (
     channel: TextChannel,
     macro_name: string
-  ): Promise<(string|MessageAttachment)[]> {
-    const cached_result = _fetchFromCache(channel, macro_name);
+  ): Promise<Macro[]> {
+    const cached_result = _getFromCache(channel, macro_name);
 
     let config: ChannelLogsQueryOptions = { limit: 100 };
-    let result: MacroResult = {attachments: [], last_scanned: null};
+    let result: MacroResult = {macros: [], last_scanned: null};
     if (cached_result != null) {
       // We have some cached results. We only need to query Discord
       // for messages written between now and cached_result.last_scanned
@@ -40,13 +59,13 @@ export default {
       [config, result] = await _fetchNextPageFromDiscord(
         channel,
         macro_name,
-        config,
         result,
+        config,
       );
     }
 
     _setInCache(channel, macro_name, result);
-    return result.attachments;
+    return result.macros;
   },
 
   destroy: async function (channel: TextChannel) {
@@ -54,7 +73,7 @@ export default {
   }
 }
 
-function _fetchFromCache(
+function _getFromCache(
   channel: TextChannel,
   macro_name: string,
 ): MacroResult | undefined {
@@ -68,8 +87,8 @@ function _fetchFromCache(
 async function _fetchNextPageFromDiscord(
   channel: TextChannel,
   macro_name: string,
-  config: ChannelLogsQueryOptions,
   result: MacroResult,
+  config: ChannelLogsQueryOptions,
 ): Promise<[ChannelLogsQueryOptions | null, MacroResult]> {
   const messages = await channel.messages.fetch(config);
   if (messages.size === 0) {
@@ -90,8 +109,8 @@ async function _fetchNextPageFromDiscord(
     before: messages.last().id,
   };
 
-  result.attachments = [
-    ...result.attachments,
+  result.macros = [
+    ...result.macros,
     ..._extractMacroFromMessage(messages, macro_name),
   ];
 
@@ -101,7 +120,7 @@ async function _fetchNextPageFromDiscord(
 function _extractMacroFromMessage(
   messages: Collection<string, Message>,
   macro_name: string,
-): (string|MessageAttachment)[] {
+): Macro[] {
   const macro_messages = messages.filter(msg => {
     if (msg.attachments.size < 1 && !MacroCommand.isLinkMacro(msg.content)) {
       return false;
@@ -111,7 +130,7 @@ function _extractMacroFromMessage(
     return (match === macro_name);
   });
 
-  let macros: (string|MessageAttachment)[] = [];
+  let macros: Macro[] = [];
   for (const [_, msg] of macro_messages) {
     if (MacroCommand.isLinkMacro(msg.content)) {
       macros = [...macros, MacroCommand.getLinkMacroLink(msg.content)];
