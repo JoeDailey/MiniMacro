@@ -1,5 +1,5 @@
 import settings from './settings';
-import { Client, Message, TextChannel, GuildChannel, DMChannel, NewsChannel, MessageAttachment, ChannelLogsQueryOptions } from 'discord.js';
+import { Client, Message, TextChannel, GuildChannel, DMChannel, NewsChannel } from 'discord.js';
 import { ErrorType } from './language';
 import MacroCache from './macro_cache';
 import MacroCommand from './macro_command';
