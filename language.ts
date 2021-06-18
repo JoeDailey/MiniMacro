@@ -1,5 +1,6 @@
 import { TextChannel, MessageEmbed, Guild } from "discord.js";
 import { findMacroChannels } from "./channels";
+import { ephemeral } from "./ephemeral";
 
 
 export class UserError extends Error {
@@ -16,7 +17,8 @@ export class UserError extends Error {
         "github.com/JoeDailey/MiniMacro",
         "https://github.com/JoeDailey.png?size=100",
       );
-    await channel.send(this.embed);
+
+    ephemeral(5, await channel.send(this.embed));
   }
 }
 
