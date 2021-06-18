@@ -1,6 +1,6 @@
 import settings from './settings';
 import { Client, Message, TextChannel } from 'discord.js';
-import { UserError } from './language';
+import { ErrorType, throwToUser, UserError } from './language';
 import MacroCache from './cache';
 import MacroCommand from './command';
 
@@ -30,11 +30,13 @@ async function handleMessage(msg: Message) {
 
   msg.channel.startTyping();
   try {
-
     const macro_name = MacroCommand.getMacroName(msg.content);
     const macros = await MacroCache.fetch(msg.channel.guild, macro_name);
-    await Promise.all(macros.map(m => msg.channel.send(m)));
+    if (macros.length < 1) {
+      throwToUser(ErrorType.NO_MACRO_OF_THAT_NAME);
+    }
 
+    await Promise.all(macros.map(m => msg.channel.send(m)));
   } catch (error) {
     if (error instanceof UserError)
       return await error.sendToChannel(msg.channel);

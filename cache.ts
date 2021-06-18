@@ -56,7 +56,7 @@ async function _getMacrosFromChannel(
   macro_name: MacroName,
 ): Promise<Macro[]> {
   await _populateCacheIfNeeded(channel);
-  return CACHE.get(channel.id).macros.get(macro_name);
+  return CACHE.get(channel.id).macros.get(macro_name) ?? [];
 }
 
 async function _populateCacheIfNeeded(channel: TextChannel): Promise<void> {
