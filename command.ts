@@ -33,7 +33,11 @@ export default {
     return LINK_MACRO.test(content);
   },
 
-  getLinkMacroLink(content: string): string {
-    return content.match(LINK_MACRO)[2];
+  getLinkMacroMaybe(content: string): string {
+    const match = content.match(LINK_MACRO);
+    if (match == null)
+      return null;
+
+    return match[2];
   }
 }
