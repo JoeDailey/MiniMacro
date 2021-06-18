@@ -23,7 +23,7 @@ type MacroName = string;
 type Macro = string | MessageAttachment
 type MacroCache = {
   macros: Map<MacroName, Macro[]>,
-  most_recent_message: MessageID,
+  most_recent_message: MessageID | null,
 };
 
 const CACHE: Map<ChannelID, MacroCache> = new Map();
@@ -88,12 +88,12 @@ async function _fetchMacrosFromDiscord(
   do {
     var messages: Collection<string, Message> = await channel.messages.fetch({
       limit: 100, // Max allowed by API
-      before: messages?.last().id,
+      before: messages?.last()?.id,
       after: last_scanned,
     });
     _collectMacros(all, messages);
     if (newest_message == null)
-      newest_message = messages.first().id;
+      newest_message = messages.first()?.id;
   } while (messages.size === 100)
 
   return {
