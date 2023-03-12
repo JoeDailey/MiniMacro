@@ -2,7 +2,6 @@ settings.ts
 
 node_modules
 
-*.js
-*.js.map
+bin
 
 **/.DS_Store

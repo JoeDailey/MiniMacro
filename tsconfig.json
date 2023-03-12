@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "outDir": "bin",
     "noImplicitAny": true,
     "removeComments": true,
     "preserveConstEnums": true,
@@ -17,6 +18,7 @@
     "index.ts",
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "bin"
   ]
 }

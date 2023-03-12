@@ -15,8 +15,9 @@
   },
   "scripts": {
     "run": "tsc --build tsconfig.json && node",
-    "dev": "nodemon --watch index.ts --exec ts-node index.ts",
-    "build": "tsc --build tsconfig.json"
+    "dev": "nodemon --watch . --exec ts-node index.ts",
+    "build": "tsc --build tsconfig.json",
+    "clean": "rm bin -r"
   },
   "devDependencies": {
     "nodemon": "^2.0.4",
