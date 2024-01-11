@@ -6,21 +6,15 @@
   "author": "Joe Dailey <josephldailey@gmail.com>",
   "license": "MIT",
   "private": true,
-  "dependencies": {
-    "@types/node": "^15.12.2",
-    "@types/ws": "^7.2.5",
-    "discord.js": "^12.2.0",
-    "tsc": "^2.0.3",
-    "typescript": "^4.3.2"
-  },
-  "scripts": {
-    "run": "tsc --build tsconfig.json && node",
-    "dev": "nodemon --watch . --exec ts-node index.ts",
-    "build": "tsc --build tsconfig.json",
-    "clean": "rm bin -r"
-  },
+  "module": "index.ts",
+  "type": "module",
   "devDependencies": {
-    "nodemon": "^2.0.4",
-    "ts-node": "^10.0.0"
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1"
   }
 }
